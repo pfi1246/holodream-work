@@ -118,8 +118,7 @@ h2,h3{margin:0;padding-bottom:5px;color:var(--blue)}h2{font-size:20px}h3{border-
 <script>
 "use strict";
 // 每列格式：服裝|團隊|角色|類型|專長|被動技能
-const rawData = `
-普通|JP 0期生|時乃空|可愛|表現力|同期 * 2 ➔ +自身全能力
+const rawData = `普通|JP 0期生|時乃空|可愛|表現力|同期 * 2 ➔ +自身全能力
 普通|JP 0期生|蘿蔔子|快樂|表現力|快樂 * 2 ➔ +分數
 普通|JP 0期生|AZKi|清純|品味|同期 * 2 ➔ +品味
 普通|JP 0期生|櫻巫女|快樂|品味|快樂 * 2 ➔ +分數
@@ -180,27 +179,31 @@ const rawData = `
 泳裝|GAMERS|大神澪|清純|技巧|清純 * 2 ➔ +技巧
 泳裝|GAMERS|貓又小粥|快樂|表現力|同期 * 2 ➔ +表現力
 泳裝|GAMERS|戌神沁音|清純|技巧|清純 * 2 ➔ +分數
-泳裝|JP 2期生|大空昴|清純|品味|清純 * 2 ➔ +對象全能力
 泳裝|JP 2期生|百鬼綾目|快樂|技巧|同期 * 2 ➔ +分數
+泳裝|JP 2期生|大空昴|清純|品味|清純 * 2 ➔ +對象全能力
 泳裝|JP 3期生|不知火芙蕾雅|快樂|技巧|快樂 * 2 ➔ +分數
 泳裝|JP 3期生|白銀諾艾爾|可愛|表現力|同期 * 2 ➔ +分數
 泳裝|JP 3期生|寶鐘瑪琳|清純|品味|清純 * 2 ➔ +品味
 泳裝|JP 4期生|角卷綿芽|快樂|品味|快樂 * 2 ➔ +分數
+泳裝|JP 4期生|常闇永遠|可愛|技巧|可愛 * 2 ➔ +技巧
 泳裝|JP 4期生|姬森璐娜|清純|表現力|同期 * 2 ➔ +表現力
-泳裝|JP 5期生|尾丸波爾卡|清純|技巧|清純 * 2 ➔ +技巧
 泳裝|JP 5期生|雪花菈米|可愛|技巧|可愛 * 2 ➔ +對象全能力
-泳裝|holoX|鷹嶺琉依|快樂|品味|同期 * 2 ➔ +分數
+泳裝|JP 5期生|獅白牡丹|可愛|品味|可愛 * 2 ➔ +分數
+泳裝|JP 5期生|尾丸波爾卡|清純|技巧|清純 * 2 ➔ +技巧
 泳裝|holoX|拉普拉斯·暗黑|可愛|表現力|可愛 * 2 ➔ +分數
+泳裝|holoX|鷹嶺琉依|快樂|品味|同期 * 2 ➔ +分數
 泳裝|holoX|博衣小夜璃|快樂|表現力|快樂 * 2 ➔ +表現力
 泳裝|ID 2期生|Kureiji Ollie|清純|品味|快樂 * 2 ➔ +品味
 泳裝|ID 2期生|Anya Melfissa|清純|表現力|清純 * 2 ➔ +表現力
+泳裝|ID 3期生|Kaela Kovalskia|快樂|品味|同期 * 2 ➔ +品味
 泳裝|ID 3期生|Kobo Kanaeru|可愛|品味|可愛 * 2 ➔ +品味
 泳裝|Myth|Mori Calliope|可愛|品味|可愛 * 2 ➔ +品味
 泳裝|Myth|Ninomae Ina'nis|快樂|品味|同期 * 2 ➔ +品味
 泳裝|Promise|Hakos Baelz|快樂|品味|同期 * 2 ➔ +自身全能力
+泳裝|Advent|Shiori Novella|可愛|品味|可愛 * 2 ➔ +自身全能力
+泳裝|Advent|Koseki Bijou|快樂|表現力|同期 * 2 ➔ +分數
 泳裝|Advent|Fuwawa Abyssgard|清純|表現力|清純 * 2 ➔ +自身全能力
 泳裝|Advent|Mococo Abyssgard|清純|表現力|清純 * 2 ➔ +分數
-泳裝|Advent|Shiori Novella|可愛|品味|可愛 * 2 ➔ +自身全能力
 泳裝|ReGLOSS|音乃瀨奏|快樂|表現力|快樂 * 2 ➔ +表現力
 泳裝|ReGLOSS|一條莉莉華|可愛|技巧|可愛 * 2 ➔ +技巧
 `.trim();
@@ -250,26 +253,27 @@ function render(){
     const searchMatch=!query||searchText.includes(query);
     const filterMatch=(!filters.gen||card.gen===filters.gen)&&(!filters.attr||card.attr===filters.attr)&&(!filters.spec||card.spec===filters.spec)&&(!filters.skill||card.skill===filters.skill)&&(!filters.app||card.app===filters.app)&&searchMatch;
     el.classList.remove("match-filter","synergy-partner","selected-core","dimmed");
-    let show=true;
+    // 保留全部角色卡：不符合條件者淡化，不再隱藏或自動補位。
+    let matched;
     if(activeCoreCard){
       const isSelf=card.id===activeCoreCard.id;
-      if(isSelf)el.classList.add("selected-core");
-      else if(isSynergy(activeCoreCard,card))el.classList.add("synergy-partner");
-      else el.classList.add("dimmed");
-      // 保留整個角色庫，讓使用者看見共鳴與非共鳴角色
-    }else if(hasFilter){
-      if(filterMatch)el.classList.add("match-filter");else el.classList.add("dimmed");
-      // 篩選時仍顯示全部卡片，未符合者淡化，方便比較
+      const isPartner=isSynergy(activeCoreCard,card);
+      matched=searchMatch&&(isSelf||isPartner);
+      if(matched&&isSelf)el.classList.add("selected-core");
+      else if(matched&&isPartner)el.classList.add("synergy-partner");
+    }else{
+      matched=filterMatch;
+      if(hasFilter&&matched)el.classList.add("match-filter");
     }
-    if(!searchMatch)show=false;
-    el.style.display=show?"":"none";
-    if(show)visible++;
+    el.style.display="";
+    if(!matched)el.classList.add("dimmed");
+    if(matched)visible++;
   });
   if(activeCoreCard)title.innerHTML=`⭐ 正在檢視與【${escapeHtml(activeCoreCard.name)}（${activeCoreCard.app}）】有技能共鳴的夥伴`;
   else if(hasFilter)title.textContent="🔍 已篩選符合條件的成員";
   else title.textContent="HoloDream 成員配對庫";
-  count.textContent=`顯示 ${visible} / ${cardDatabase.length} 張角色卡`;
-  empty.style.display=visible?"none":"block";
+  count.textContent=`符合 ${visible} / ${cardDatabase.length} 張角色卡（其餘淡化顯示）`;
+  empty.style.display="none";
 }
 function isSynergy(core,other){
   const cond=core.condType;
